@@ -1,0 +1,8 @@
+#
+# Configure RT command to connect to the RT test server
+server http://root:jsKf14Zq@ithelpdesk.ema.esselte.net/rt
+user root
+passwd jsKf14Zq
+# query Created > '01/01/2015' AND 'CF.{Ticket Classification}' NOT LIKE 'ERP_SAP_%'
+# queue IT_Germany OR Queue=IT_Germany_Uelzen
+externalauth 0

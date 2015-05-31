@@ -15,6 +15,12 @@
 #   .rtrc   contains server configuration (URL and credentials)
 #   jq      parse rt's output to JSON (http://stedolan.github.io/jq/)
 #   awk     helps converting dates to JavaScript expectations
+# Deployment Notes:
+#   This script is deployed in RT Production as /usr/local/bin/rt_sla_de
+#   It runs via crontab and saves its output to /usr/local/etc/tickets_de.json
+#   The rt command is changed to /opt/rt4/bin/rt
+#   The jq command is changed to /usr/local/bin/jq
+#   Configuration information is taken from /etc/rt.conf
 # Credits:
 #   I took inspiration from this article:
 #     http://infiniteundo.com/post/99336704013/convert-csv-to-json-with-jq

@@ -126,12 +126,11 @@ d3.json("./data/tickets.json", function (data) {
     //.group(statusGroup)
     //.title(function(d) { return d.value + toPlural(" business case", d.value) + " " + d.key; });
 
-  // Table of Business Cases
-  var nFmt = d3.format("4d");
+  // Table of Tickets
   tktTab.width(960).height(800)
     .dimension(tktDim)
     .group(function(d) { return "All Tickets"; })
-    .size(200)
+    .size(2000)
     .columns([
       function(d) { return ticketA(d.id, d.id); },
       function(d) { return ticketA(d.id, d.subject); },
@@ -139,10 +138,13 @@ d3.json("./data/tickets.json", function (data) {
       function(d) { return d.owner; },
       function(d) { return d.requestors; },
       function(d) { return d.status; },
-      function(d) { return d.priority; },
       function(d) { return d.classification; },
-      function(d) { return d.created; },
-      function(d) { return d.resolved; }
+      function(d) { return moment(new Date(d.created)).isoWeek(); },
+      function(d) {
+        var dBeg = moment(new Date(d.created));
+        var dEnd = ( d.resolved == "Not Set" || (d.status != "resolved" && d.status != "rejected") ? moment(new Date()) : moment(new Date(d.resolved)) );
+        return dEnd.diff(dBeg, "days");
+      }
     ])
     .sortBy(function(d){ return d.id; })
     .order(d3.ascending);

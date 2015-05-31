@@ -7,29 +7,21 @@
 "use strict";
 
 // Create chart objects & link them to the page, initialize page globals
-var dataTable = dc.dataTable("#bc-table","bc");
-var testsPie = dc.pieChart("#bc-test-chart","bc");
-var statusRow = dc.rowChart("#issue-stat-chart","ii");
-var ownerPie = dc.pieChart("#issue-own-chart","ii");
-var impactBub = dc.bubbleChart("#issue-impact-chart","ii");
-var issueTable = dc.dataTable("#issue-table", "ii");
+var tktTab = dc.dataTable("#tkt-table","tkt");
+var tktBar = dc.barChart("#tkt-sl-chart","tkt");
+var tktPie = dc.pieChart("#tkt-pc-chart","tkt");
 
 // Hold crossfilter facts
-var facts;                // Business Cases
-var issueFacts;           // Issues
-var factsAll;             // Counters
-var issueFactsAll;        // Counters
-var factsLoaded = false;  // Boolean set after loading, enables filters (BC's)
-var issueLoaded = false;  // Boolean set after loading, enables filters (Issues)
+var facts;                // Tickets
 
 // Filter on facts is page-wide
-var filterLocn = 0;       // 0=All, 1=Hestra, 2=StAme
+/*var filterLocn = 0;       // 0=All, 1=Hestra, 2=StAme
 var siteDim;              // Dimension to filter upon
 var issueSiteDim;         // For issues, too
-
+*/
 // Create the spinning wheel while waiting for data load
 // See http://fgnass.github.io/spin.js/
-var spinner = [ null, null, null, null, null, null ];
+/*var spinner = [ null, null, null, null, null, null ];
 var spinDiv = [ 0, 0, 0, 0, 0, 0 ];
 var spinGrp = [ "bc", "bc", "ii", "ii", "ii", "ii" ];  // Follow chart groups
 $(document).ready(function() {
@@ -63,7 +55,7 @@ $(document).ready(function() {
   // Reset location filter
   setLocationFilter( 0 );
 });
-
+*/
 // Map a status letter to its corresponding colored icon
 function bcSymbol( c ) {
   switch( c.toUpperCase() ) {
@@ -117,204 +109,51 @@ d3.json("./data/tickets.json", function (data) {
 
   // Run the data through crossfilter and load facts and dimensions
   facts = crossfilter(data);
-  factsAll = facts.groupAll();
-  siteDim = facts.dimension(function (d) { return d.site; });
-  var bcDim = facts.dimension(function (d) { return d.id; });
-  var statusDim = facts.dimension(function (d) { return d.completion; });
-  var statusGroup = statusDim.group();
+  //factsAll = facts.groupAll();
+  //siteDim = facts.dimension(function (d) { return d.site; });
+  var tktDim = facts.dimension(function (d) { return d.id; });
+  //var statusDim = facts.dimension(function (d) { return d.completion; });
+  //var statusGroup = statusDim.group();
 
   // Business cases status pie chart
-  testsPie.width(200).height(200)
-    .radius(100)
-    .innerRadius(70)
-    .ordinalColors(["#5668e2","#56aee2","#56e2cf","#56e289","#68e256","#aee256","#e2cf56","#e28956","#e25668","#e256ae","#cf56e2","#8a56e2"])
-    .legend(dc.legend().x(50).y(40).itemHeight(12).gap(3))
-    .renderLabel(false)
-    .dimension(statusDim)
-    .group(statusGroup)
-    .title(function(d) { return d.value + toPlural(" business case", d.value) + " " + d.key; });
+  //testsPie.width(200).height(200)
+    //.radius(100)
+    //.innerRadius(70)
+    //.ordinalColors(["#5668e2","#56aee2","#56e2cf","#56e289","#68e256","#aee256","#e2cf56","#e28956","#e25668","#e256ae","#cf56e2","#8a56e2"])
+    //.legend(dc.legend().x(50).y(40).itemHeight(12).gap(3))
+    //.renderLabel(false)
+    //.dimension(statusDim)
+    //.group(statusGroup)
+    //.title(function(d) { return d.value + toPlural(" business case", d.value) + " " + d.key; });
 
   // Table of Business Cases
   var nFmt = d3.format("4d");
-  dataTable.width(960).height(800)
-    .dimension(bcDim)
-    .group(function(d) { return ( filterLocn == 0 ? "All Business Cases" : ( filterLocn == 1 ? "Business Cases Hestra" : "Business Cases St.Amé" ) ); })
+  tktTab.width(960).height(800)
+    .dimension(tktDim)
+    .group(function(d) { return "All Tickets"; })
     .size(200)
     .columns([
       function(d) { return ticketA(d.id, d.id); },
-      function(d) { return d.site; },
-      function(d) { return( d.subject.substring(0,5) == "Integ" ? ticketA(d.id, d.subject.substr(19)) : ticketA(d.id, d.subject) ); },
-      function(d) { return d.completion; },
-      function(d) { return nFmt( d.issues ); },
-      function(d) { return bcSymbol( d.progress.charAt(0) ); },
-      function(d) { return bcSymbol( d.progress.charAt(1) ); },
-      function(d) { return bcSymbol( d.progress.charAt(2) ); },
-      function(d) { return bcSymbol( d.progress.charAt(3) ); },
-      function(d) { return bcSymbol( d.progress.charAt(4) ); },
-      function(d) { return bcSymbol( d.progress.charAt(5) ); },
-      function(d) { return bcSymbol( d.progress.charAt(6) ); },
-      function(d) { return bcSymbol( d.progress.charAt(7) ); },
-      function(d) { return bcSymbol( d.progress.charAt(8) ); },
-      function(d) { return bcSymbol( d.progress.charAt(9) ); },
-      function(d) { return bcSymbol( d.progress.charAt(10) ); }
+      function(d) { return ticketA(d.id, d.subject); },
+      function(d) { return d.queue; },
+      function(d) { return d.owner; },
+      function(d) { return d.requestors; },
+      function(d) { return d.status; },
+      function(d) { return d.priority; },
+      function(d) { return d.classification; },
+      function(d) { return d.created; },
+      function(d) { return d.resolved; }
     ])
     .sortBy(function(d){ return d.id; })
     .order(d3.ascending);
 
-  dc.dataCount(".bc-data-count", "bc")
+/*  dc.dataCount(".bc-data-count", "bc")
     .dimension(facts)
     .group(factsAll);
-
+*/
   // Render the charts
-  dc.renderAll("bc");
-  dataLoaded("bc");
-
-});
-
-// Load issue data from the server
-// d3.json("../cgi-bin/rapid/issues.pl", function (data) {
-d3.json("./data/issues.json", function (data) {
-
-  // Run the data through crossfilter and load facts and dimensions
-  issueFacts = crossfilter(data);
-  issueFactsAll = issueFacts.groupAll();
-  issueSiteDim = issueFacts.dimension(function (d) { return d.site; });
-  var issueDim = issueFacts.dimension(function (d) { return d.id; });
-  var issueStatusDim = issueFacts.dimension(function (d) { return d.status; });
-  var issueStatusGroup = issueStatusDim.group();
-  var issueOwnerDim = issueFacts.dimension(function (d) { return d.owner; });
-  var issueOwnerGroup = issueOwnerDim.group();
-
-  // Issue status row chart
-  issueStatusDim.filterAll();
-  statusRow.width(200).height(200)
-    .margins({top:5, left:10, right:10, bottom:20})
-    .dimension(issueStatusDim)
-    .group(issueStatusGroup)
-    .colors(d3.scale.category10())
-    .label(function (d) { return d.key; })
-    .title(function (d) { return d.value + " " + d.key + toPlural(" issue", d.value); })
-    .elasticX(true)
-    .xAxis().ticks(4);
-
-  // Table of Issues -- Shows them all
-  issueTable.width(960).height(800)
-    .dimension(issueDim)
-    .group(function(d) { return ( filterLocn == 0 ? "All Issues" : ( filterLocn == 1 ? "Issues Hestra" : "Issues St.Amé" ) ); })
-    .size(200)
-    .columns([
-      function(d) { return ticketA(d.id, d.id); },
-      function(d) { return d.site; },
-      function(d) { return ticketA(d.id, d.subject); },
-      function(d) { return d.owner; },
-      function(d) { return d.frequency; },
-      function(d) { return d.impact; },
-      function(d) { return d.status; },
-      function(d) { return d.bc; }
-      ])
-      .sortBy(function(d){ return d.id; })
-      .order(d3.ascending);
-
-  // Issue owners pie chart -- From now on only active issues
-  issueStatusDim.filter(function (d) { return d != "resolved"; });
-  ownerPie.width(200).height(200)
-    .radius(100)
-    .ordinalColors(["#8a56e2","#cf56e2","#e256ae","#e25668","#e28956","#e2cf56","#aee256","#68e256","#56e289","#56e2cf","#56aee2","#5668e2"])
-    .dimension(issueOwnerDim)
-    .group(issueOwnerGroup)
-    .label(function (d) { return d.key; })
-    .title(function (d) { return d.key + ": " + d.value + toPlural(" issue", d.value); });
-
-  // Issue grouping by Frequency / Impact (for the bubble chart)
-  var issueFreqImpDim = issueFacts.dimension(function (d) {
-    var f = d.frequency.charAt(0).toUpperCase();
-    var i = d.impact.charAt(0).toUpperCase();
-    if( f != "H" && f != "M" && f != "L" ) {
-      f = "L";
-    }
-    if( i != "H" && i != "M" && i != "L" ) {
-      i = "L";
-    }
-    return( f.concat(i) );
-  });
-  var issueFreqImpGroup = issueFreqImpDim.group();
-
-  // Assign a temperature to each combination of frequency and impact
-  // ranging from 40 to 200 "degrees"
-  var temperature = function(fi) {
-    var temps = {HH:200, HM:180, HL:160, MH:140, MM:120, ML:100, LH:80, LM:60, LL:40};
-    return temps[fi];
-  };
-
-  // Assign an axis position to each inidcator, one of: 10, 20, 30
-  var position = function(v) {
-    return( v === 'H' ? 30 : ( v === 'M' ? 20 : 10 ) );
-  };
-
-  // Issue impact bubble chart
-  impactBub.width(200).height(200)
-    .margins({top:5, left:25, right:2, bottom:30})
-    .dimension(issueFreqImpDim)
-    .group(issueFreqImpGroup)
-    .colors(colorbrewer.YlOrRd[9])
-    .colorDomain([40,200])
-    .colorAccessor(function (p) { return temperature(p.key); } )
-    .keyAccessor(function (p) { return position(p.key.charAt(0)); } )
-    .valueAccessor(function (p) { return position(p.key.charAt(1)); } )
-    .radiusValueAccessor(function (p) { return p.value; } )
-    .maxBubbleRelativeSize(0.3)
-    .x(d3.scale.linear().domain([10,30]))
-    .y(d3.scale.linear().domain([10,30]))
-    .r(d3.scale.linear().domain([0,100]))
-    .elasticX(true)
-    .elasticY(true)
-    .elasticRadius(true)
-    .yAxisPadding(5)
-    .xAxisPadding(5)
-    .renderHorizontalGridLines(true)
-    .renderVerticalGridLines(true)
-    .xAxisLabel("Frequency")
-    .yAxisLabel("Impact")
-    .renderLabel(true)
-    .label(function (d) { return d.value; })
-    .renderTitle(true)
-    .title(function (d) {
-      return d.value + " " + toPlural("issue", d.value) + " " +
-             d.key.charAt(0) + " freq./" + d.key.charAt(1) + " imp.";
-    });
-    impactBub.yAxis().tickFormat(function (v) {
-      switch( v ) {
-        case 10:
-          return "L";
-        case 20:
-          return "M";
-        case 30:
-          return "H";
-        default:
-          return " ";
-      }
-    });
-    impactBub.xAxis().tickFormat(function (v) {
-      switch( v ) {
-        case 10:
-          return "L";
-        case 20:
-          return "M";
-        case 30:
-          return "H";
-        default:
-          return " ";
-      }
-    });
-
-    // Update counters
-    dc.dataCount(".issue-data-count", "ii")
-      .dimension(issueFacts)
-      .group(issueFactsAll);
-
-    // Render the charts
-    dc.renderAll("ii");
-    dataLoaded("ii");
+  dc.renderAll("tkt");
+  //dataLoaded("bc");
 
 });
 

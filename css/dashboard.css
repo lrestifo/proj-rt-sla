@@ -103,11 +103,19 @@ body {
   display: inline-block;
   border-radius: 50%;
 }
-.placeholder .proj-chart {
+.placeholder .proj-chart-small {
   display: inline-block;
   border-radius: 50%;
   min-width: 200px;
   min-height: 200px;
+  border: 1px;
+}
+.placeholder .proj-chart-wide {
+  display: inline-block;
+  border-radius: 50%;
+  min-width: 600px;
+  min-height: 200px;
+  border: 1px;
 }
 
 

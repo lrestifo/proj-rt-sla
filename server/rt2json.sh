@@ -21,18 +21,30 @@ queues="IT_Germany,IT_Germany_Uelzen"
 fields="Queue,Owner,Subject,Status,Priority,Requestors,Created,Resolved,CF.{Country},CF.{Ticket Classification},CF.{Request_Type}"
 tktsql="Created > '01/01/2015' AND 'CF.{Ticket Classification}' NOT LIKE 'ERP_SAP_%'"
 
-rt ls -q "$queues" -f "$fields" "$tktsql" | \
-  jq --slurp --raw-input --raw-output \
-    'split("\n") | .[1:] | map(split("\t")) |
-       map({"id": .[0] | tonumber,
-            "queue": .[1],
-            "owner": .[2],
-            "subject": .[3],
-            "status": .[4],
-            "priority": .[5],
-            "requestors": .[6],
-            "created": .[7],
-            "resolved": .[8],
-            "country": .[9],
-            "requestType": .[10],
-            "classification": .[11]})'
+# rt ls -q "$queues" -f "$fields" "$tktsql" | \
+#   jq --slurp --raw-input --raw-output \
+#     'split("\n") | .[1:] | map(split("\t")) |
+#       map({"id": .[0] | tonumber,
+#             "queue": .[1],
+#             "owner": .[2],
+#             "subject": .[3],
+#             "status": .[4],
+#             "priority": .[5],
+#             "requestors": .[6],
+#             "created": .[7],
+#             "resolved": .[8],
+#             "country": .[9],
+#             "requestType": .[10],
+#             "classification": .[11]})' | \
+    awk '
+      BEGIN {
+        month["Jan"] = 0; month["Feb"] = 1; month["Mar"] = 2; month["Apr"] = 3;
+        month["May"] = 4; month["Jun"] = 5; month["Jul"] = 6; month["Aug"] = 7;
+        month["Sep"] = 8; month["Oct"] = 9; month["Nov"] =10; month["Dec"] =11;
+      }
+      {
+        if( $2 ~ /"[A-Z][a-z][a-z]/ && $5 ~ /[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/ && $6 ~ /[0-9][0-9][0-9][0-9]/ )
+          printf "    %s new Date(%d,%d,%d),\n", $1, $6, month[$3], $4;
+        else
+          print $0;
+      }'

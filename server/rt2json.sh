@@ -27,18 +27,19 @@ queues="IT_Germany,IT_Germany_Uelzen"
 fields="Queue,Owner,Subject,Status,Priority,Requestors,Created,Resolved,CF.{Country},CF.{Ticket Classification},CF.{Request_Type}"
 tktsql="Created > '01/01/2015' AND 'CF.{Ticket Classification}' NOT LIKE 'ERP_SAP_%'"
 
-rt ls -q "$queues" -f "$fields" "$tktsql" | \
-  jq --slurp --raw-input --raw-output \
-    'split("\n") | .[1:] | map(split("\t")) |
-      map({"id": .[0] | tonumber,
-            "queue": .[1],
-            "owner": .[2],
-            "subject": .[3],
-            "status": .[4],
-            "priority": .[5],
-            "requestors": .[6],
-            "created": .[7],
-            "resolved": .[8],
-            "country": .[9],
-            "requestType": .[10],
-            "classification": .[11]})'
+# rt ls -q "$queues" -f "$fields" "$tktsql" | \
+  # jq --slurp --raw-input --raw-output \
+    # 'split("\n") | .[1:] | map(split("\t")) |
+      # map({"id": .[0] | tonumber,
+            # "queue": .[1],
+            # "owner": .[2],
+            # "subject": .[3],
+            # "status": .[4],
+            # "priority": .[5],
+            # "requestors": .[6],
+            # "created": .[7],
+            # "resolved": .[8],
+            # "country": .[9],
+            # "requestType": .[10],
+            # "classification": .[11]})'
+rt ls -q "$queues" -f "$fields" "$tktsql"

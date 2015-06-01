@@ -130,7 +130,7 @@ d3.json("./data/tickets.json", function (data) {
   tktTab.width(960).height(800)
     .dimension(tktDim)
     .group(function(d) { return "All Tickets"; })
-    .size(2000)
+    .size(facts.size())
     .columns([
       function(d) { return ticketA(d.id, d.id); },
       function(d) { return ticketA(d.id, d.subject); },

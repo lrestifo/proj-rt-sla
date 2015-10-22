@@ -1,8 +1,8 @@
 <?php
 // http://stackoverflow.com/questions/20472698/apache-settings-and-php-headers-download-a-csv
   header('Content-Type: application/csv');
-  header('Content-Disposition: attachment; filename=example.csv');
+  header('Content-Disposition: attachment; filename=../data/tickets.csv');
   header('Pragma: no-cache');
-  header('Content-Length: ' . filesize("path and file name of csv to send"));
-  readfile("name and path of CSV file you wish to send");
+  header('Content-Length: ' . filesize("../data/tickets.csv"));
+  readfile("../data/tickets.csv");
 ?>

@@ -25,7 +25,7 @@ use strict;
 use Error qw(:try);
 use DateTime;
 use Date::Parse;
-use Date::Calc qw(Time_to_Date check_date Delta_Days Week_of_Year);
+use Date::Calc qw(Time_to_Date check_date Delta_Days Week_of_Year Today);
 use Getopt::Long;
 use RT::Client::REST;
 binmode(STDOUT, ":utf8");
@@ -34,10 +34,12 @@ binmode(STDOUT, ":utf8");
 my $serv = "http://some.server/rt";
 my $user = "user";
 my $pass = "pass";
+my $sla = 5;
 GetOptions(
   "server:s"    => \$serv,
   "user:s"      => \$user,
-  "password:s"  => \$pass
+  "password:s"  => \$pass,
+  "sla:i"       => \$sla
 ) or die("Error in command line arguments\n");
 
 my $rt = RT::Client::REST->new(
@@ -78,14 +80,15 @@ try {
         "Impact", $sep,
         "Classification", $sep,
         "CreatedInWeek", $sep,
-        "AgeInDays", $eol;
+        "AgeInDays", $sep,
+        "InSLA", $eol;
   for my $id (@ids) {
     my $t = $rt->show(type => "ticket", id => $id);
-    print substr($t->{id},7), $sep, # RT returns id as 'ticket/nnnn'
+    print substr($t->{id},7), $sep,           # RT returns id as 'ticket/nnnn'
           $t->{Subject}, $sep,
           $t->{Owner}, $sep,
           $t->{Queue}, $sep,
-          $t->{Requestors}, $sep,
+          sanitize($t->{Requestors}), $sep,   # Beware of merged tickets
           $t->{Priority}, $sep,
           $t->{Status}, $sep,
           $t->{Created}, $sep,
@@ -98,12 +101,21 @@ try {
           $t->{"CF.{Impact Scope}"}, $sep,
           $t->{"CF.{Ticket Classification}"}, $sep,
           weekNo($t->{Created}), $sep,
-          ageInDays($t->{Created}, $t->{Resolved}), $eol;
+          ageInDays($t->{Created}, $t->{Resolved}), $sep,
+          inSLA($t->{Created}, $t->{Resolved}, $sla), $eol;
   }
 } catch RT::Client::REST::Exception with {
   # something went wrong.
   die shift->message;
 };
+
+#
+# Remove newlines from inside a string
+sub sanitize {
+  my $s = shift(@_);
+  $s =~ s/\n/ /g;
+  return $s;
+}
 
 #
 # Given ticket creation date, returns its week number as YYYYWW (zero-padded)
@@ -124,7 +136,7 @@ sub weekNo {
 # Returns -1 if ticket is not resolved, 0 if resolved on creation day, >0 later
 sub ageInDays {
   my ($created, $resolved) = @_;
-  if( $resolved =~ /Not set/) {
+  if( $resolved =~ /Not set/ ) {
     return -1;
   } else {
     my $timeC = str2time($created);
@@ -137,6 +149,21 @@ sub ageInDays {
       return -1;
     }
   }
+}
+
+#
+# Given ticket creation and resolution dates, and the SLA level in days,
+# return 1 if resolution is within the SLA, 0 otherwise.  For unresolved
+# tickets, measure against today's date
+sub inSLA {
+  my ($created, $resolved, $sla) = @_;
+  my $age = ageInDays($created, $resolved);
+  if( $age < 0 ) {
+    my ($yearC, $monthC, $dayC) = Time_to_Date(str2time($created));
+    my ($yearT, $monthT, $dayT) = Today();
+    $age = Delta_Days($yearC, $monthC, $dayC, $yearT, $monthT, $dayT);
+  }
+  return $age <= $sla ? 1 : 0;
 }
 
 # Game over
